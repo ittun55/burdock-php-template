@@ -1,0 +1,23 @@
+{
+    "name": "burdock/php-template",
+    "description": "render template with several formats",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Hiraku Saito",
+            "email": "ittun55@gmail.com"
+        }
+    ],
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Burdock\\Template\\": "src/Template"
+        }
+    },
+    "require": {
+        "phpoffice/phpspreadsheet": "^1.9"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^8.3"
+    }
+}
