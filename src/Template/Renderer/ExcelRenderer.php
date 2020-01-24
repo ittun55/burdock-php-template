@@ -41,7 +41,8 @@ class ExcelRenderer implements IRenderer
                 $excel->addSheet($sheet);
             }
         }
-        $excel->removeSheetByIndex(1);
+        if ($excel->getSheetCount() > 1)
+            $excel->removeSheetByIndex(1);
 
         $writer = IOFactory::createWriter($excel, 'Xlsx');
         $writer->save($output_path);

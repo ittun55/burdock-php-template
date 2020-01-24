@@ -68,6 +68,8 @@ class ExcelRendererTest extends TestCase
                 ]
             ]
         ];
+        $json = json_encode($config, JSON_PRETTY_PRINT);
+        echo $json . PHP_EOL;
         $data = [
             'summary' => [
                 'invoice_no'            => 'ABC123456',
