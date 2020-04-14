@@ -89,10 +89,23 @@ class ExcelRenderer implements IRenderer
                 $value = preg_replace_callback('/{(@\w+)}/', function($m) use ($embedded) {
                     return $embedded[$m[1]];
                 }, $field);
-                $sheet->setCellValue($cell, $value);
+                if (is_array($value)) {
+                    if (isset($value[1]['wrap_text']))
+                        $sheet->getStyle($field)->getAlignment()->setWrapText(true);
+                    $sheet->setCellValue($cell,  $value[0]);
+                } else {
+                    $sheet->setCellValue($cell,  $value);
+                }
             } else {
-                if (array_key_exists($field, $summary))
-                    $sheet->setCellValue($cell, $summary[$field]);
+                if (array_key_exists($field, $summary)) {
+                    if (is_array($summary[$field])) {
+                        if (isset($summary[$field][1]['wrap_text']))
+                            $sheet->getStyle($cell)->getAlignment()->setWrapText(true);
+                        $sheet->setCellValue($cell,  $summary[$field][0]);
+                    } else {
+                        $sheet->setCellValue($cell,  $summary[$field]);
+                    }
+                }
             }
         }
         $tpl_start   = $page_cnf['rows']['start_idx'];
@@ -102,7 +115,13 @@ class ExcelRenderer implements IRenderer
                 $row_idx  = (int)$tpl_start + (int)$idx;
                 $cell = $column . $row_idx;
                 $value = $row[$field];
-                $sheet->setCellValue($cell,  $value);
+                if (is_array($value)) {
+                    if (isset($value[1]['wrap_text']))
+                        $sheet->getStyle($field)->getAlignment()->setWrapText(true);
+                    $sheet->setCellValue($cell,  $value[0]);
+                } else {
+                    $sheet->setCellValue($cell,  $value);
+                }
             }
         }
     }
