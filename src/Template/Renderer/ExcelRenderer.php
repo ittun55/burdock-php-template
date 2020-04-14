@@ -1,6 +1,7 @@
 <?php
 namespace Burdock\Template\Renderer;
 
+use PhpOffice\PhpSpreadsheet\Exception;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
@@ -12,7 +13,7 @@ class ExcelRenderer implements IRenderer
      * @param array $data データ
      * @param string $output_path
      * @return void
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws Exception
      * @throws \PhpOffice\PhpSpreadsheet\Reader\Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      */
@@ -81,44 +82,40 @@ class ExcelRenderer implements IRenderer
      * @param array $rows 明細データ
      * @param array $embedded 組み込み変数
      * @return void
+     * @throws Exception
      */
     public static function renderPage(array $page_cnf, Worksheet $sheet, array $summary, array $rows, array $embedded): void
     {
-        foreach ($page_cnf['summary']['mappings'] as $cell => $field) {
-            if (preg_match('/{.+}/', $field)) {
+        foreach ($page_cnf['summary']['mappings'] as $cell => $_field) {
+            if (preg_match('/{.+}/', $_field)) {
                 $value = preg_replace_callback('/{(@\w+)}/', function($m) use ($embedded) {
                     return $embedded[$m[1]];
-                }, $field);
-                if (is_array($value)) {
-                    if (isset($value[1]['wrap_text']))
-                        $sheet->getStyle($field)->getAlignment()->setWrapText(true);
-                    $sheet->setCellValue($cell,  $value[0]);
-                } else {
-                    $sheet->setCellValue($cell,  $value);
-                }
+                }, $_field);
+                $sheet->setCellValue($cell,  $value);
             } else {
-                if (array_key_exists($field, $summary)) {
-                    if (is_array($summary[$field])) {
-                        if (isset($summary[$field][1]['wrap_text']))
-                            $sheet->getStyle($cell)->getAlignment()->setWrapText(true);
-                        $sheet->setCellValue($cell,  $summary[$field][0]);
-                    } else {
-                        $sheet->setCellValue($cell,  $summary[$field]);
-                    }
+                $field = is_array($_field) ? $_field[0]: $_field;
+                if (!array_key_exists($field, $summary)) continue;
+                if (is_array($_field)) {
+                    if (isset($_field[1]['wrap_text']))
+                        $sheet->getStyle($cell)->getAlignment()->setWrapText(true);
+                    $sheet->setCellValue($cell,  $summary[$field]);
+                } elseif (array_key_exists($_field, $summary)) {
+                    $sheet->setCellValue($cell,  $summary[$field]);
                 }
             }
         }
         $tpl_start   = $page_cnf['rows']['start_idx'];
         foreach ($rows as $idx => $row) {
-            foreach ($page_cnf['rows']['mappings'] as $column => $field) {
+            foreach ($page_cnf['rows']['mappings'] as $column => $_field) {
+                $field = is_array($_field) ? $_field[0]: $_field;
                 if (!array_key_exists($field, $row)) continue;
                 $row_idx  = (int)$tpl_start + (int)$idx;
                 $cell = $column . $row_idx;
                 $value = $row[$field];
-                if (is_array($value)) {
-                    if (isset($value[1]['wrap_text']))
-                        $sheet->getStyle($field)->getAlignment()->setWrapText(true);
-                    $sheet->setCellValue($cell,  $value[0]);
+                if (is_array($_field)) {
+                    if (isset($_field[1]['wrap_text']))
+                        $sheet->getStyle($cell)->getAlignment()->setWrapText(true);
+                    $sheet->setCellValue($cell,  $value);
                 } else {
                     $sheet->setCellValue($cell,  $value);
                 }
