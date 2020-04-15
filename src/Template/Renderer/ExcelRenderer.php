@@ -87,39 +87,35 @@ class ExcelRenderer implements IRenderer
     public static function renderPage(array $page_cnf, Worksheet $sheet, array $summary, array $rows, array $embedded): void
     {
         foreach ($page_cnf['summary']['mappings'] as $cell => $_field) {
-            if (preg_match('/{.+}/', $_field)) {
-                $value = preg_replace_callback('/{(@\w+)}/', function($m) use ($embedded) {
+            list($field, $styles) = is_array($_field) ? $_field : [$_field, null];
+            if (preg_match('/{.+}/', $field)) {
+                $value = preg_replace_callback('/{(@\w+)}/', function ($m) use ($embedded) {
                     return $embedded[$m[1]];
-                }, $_field);
+                }, $field);
                 $sheet->setCellValue($cell,  $value);
             } else {
-                $field = is_array($_field) ? $_field[0]: $_field;
                 if (!array_key_exists($field, $summary)) continue;
-                if (is_array($_field)) {
-                    if (isset($_field[1]['wrap_text']))
-                        $sheet->getStyle($cell)->getAlignment()->setWrapText(true);
-                    $sheet->setCellValue($cell,  $summary[$field]);
-                } elseif (array_key_exists($_field, $summary)) {
-                    $sheet->setCellValue($cell,  $summary[$field]);
-                }
+                $value = $summary[$field];
+                self::setValue($sheet, $cell, $styles, $value);
             }
         }
         $tpl_start   = $page_cnf['rows']['start_idx'];
         foreach ($rows as $idx => $row) {
             foreach ($page_cnf['rows']['mappings'] as $column => $_field) {
-                $field = is_array($_field) ? $_field[0]: $_field;
+                list($field, $styles) = is_array($_field) ? $_field : [$_field, null];
                 if (!array_key_exists($field, $row)) continue;
                 $row_idx  = (int)$tpl_start + (int)$idx;
                 $cell = $column . $row_idx;
                 $value = $row[$field];
-                if (is_array($_field)) {
-                    if (isset($_field[1]['wrap_text']))
-                        $sheet->getStyle($cell)->getAlignment()->setWrapText(true);
-                    $sheet->setCellValue($cell,  $value);
-                } else {
-                    $sheet->setCellValue($cell,  $value);
-                }
+                self::setValue($sheet, $cell, $styles, $value);
             }
         }
+    }
+
+    public static function setValue(Worksheet $sheet, string $cell, ?array $styles, $value)
+    {
+        if (isset($styles['wrap_text']))
+            $sheet->getStyle($cell)->getAlignment()->setWrapText(true);
+        $sheet->setCellValue($cell, $value);
     }
 }
