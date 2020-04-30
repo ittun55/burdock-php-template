@@ -114,8 +114,10 @@ class ExcelRenderer implements IRenderer
 
     public static function setValue(Worksheet $sheet, string $cell, ?array $styles, $value)
     {
-        if (isset($styles['wrap_text']))
+        if (isset($styles['wrap_text'])) {
             $sheet->getStyle($cell)->getAlignment()->setWrapText(true);
+            $value = str_replace("\\n", "\n", $value);
+        }
         $sheet->setCellValue($cell, $value);
     }
 }
