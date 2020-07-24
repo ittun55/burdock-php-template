@@ -37,6 +37,7 @@ class ExcelRendererTest extends TestCase
                             'Z' => 'quantity', // amount
                             'AC' => 'work_time',
                             'AG' => 'price',
+                            'AZ' => '@rownum'
                         ]
                     ]
                 ],
@@ -63,6 +64,7 @@ class ExcelRendererTest extends TestCase
                             'Z' => 'quantity', // amount
                             'AC' => 'work_time',
                             'AG' => 'price',
+                            'AZ' => '@rownum'
                         ]
                     ]
                 ]

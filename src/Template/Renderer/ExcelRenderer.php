@@ -25,12 +25,14 @@ class ExcelRenderer implements IRenderer
         $rows_per_page = self::splitRowsPerPage($config, $data);
         $embedded = [
             '@TOTAL_PAGES' => count($rows_per_page),
-            '@PAGE_NUM' => 1
+            '@PAGE_NUM' => 1,
+            '@rownum' => 0
         ];
         foreach ($rows_per_page as $page_num => $rows) {
             $embedded['@PAGE_NUM'] = $page_num + 1;
             $page_cnf = ($page_num == 0) ? $config['pages'][0] : $config['pages'][1];
             $summary  = $data['summary'];
+            $rownum = 1;
             if ($page_num === 0) {
                 $sheet = $excel->getSheet($page_num);
                 $sheet->setTitle('page '.$embedded['@PAGE_NUM']);
@@ -82,9 +84,8 @@ class ExcelRenderer implements IRenderer
      * @param array $rows 明細データ
      * @param array $embedded 組み込み変数
      * @return void
-     * @throws Exception
      */
-    public static function renderPage(array $page_cnf, Worksheet $sheet, array $summary, array $rows, array $embedded): void
+    public static function renderPage(array $page_cnf, Worksheet $sheet, array $summary, array $rows, array &$embedded): void
     {
         foreach ($page_cnf['summary']['mappings'] as $cell => $_field) {
             list($field, $styles) = is_array($_field) ? $_field : [$_field, null];
@@ -101,12 +102,13 @@ class ExcelRenderer implements IRenderer
         }
         $tpl_start   = $page_cnf['rows']['start_idx'];
         foreach ($rows as $idx => $row) {
+            $embedded['@rownum']++;
             foreach ($page_cnf['rows']['mappings'] as $column => $_field) {
                 list($field, $styles) = is_array($_field) ? $_field : [$_field, null];
-                if (!array_key_exists($field, $row)) continue;
+                if (!array_key_exists($field, $row) && $field !== '@rownum') continue;
                 $row_idx  = (int)$tpl_start + (int)$idx;
                 $cell = $column . $row_idx;
-                $value = $row[$field];
+                $value = ($field === '@rownum') ? $embedded['@rownum'] : $row[$field];
                 self::setValue($sheet, $cell, $styles, $value);
             }
         }
